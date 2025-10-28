@@ -90,6 +90,7 @@ public class SocketHandler {
                     case "RANKWIN" -> onReceiveRankWin(received);
                     case "HISTORY" -> onReceiveHistory(received);
                     case "TRASH_LIST" -> onReceiveTrashList(received);
+                    case "SCORE_UPDATE" -> onReceiveScoreUpdate(received);
                     case "EXIT" -> running = false;
                     default -> System.out.println("Unknown type: " + type);
                 }
@@ -516,6 +517,24 @@ public class SocketHandler {
     private void onReceiveAskPlayAgain(String received) {
         // TODO: implement if server sends ASK_PLAY_AGAIN
     }
+    
+    private void onReceiveScoreUpdate(String received) {
+        String[] sp = received.split(";");
+        // format: SCORE_UPDATE;success;username;score
+        if (sp.length >= 4 && "success".equals(sp[1])) {
+            String user = sp[2];
+            float newScore = Float.parseFloat(sp[3]);
+
+            // nếu là mình -> cập nhật label
+            if (loginUser != null && loginUser.equals(user)) {
+                this.score = newScore;
+                runEDT(() -> ClientRun.homeView.setUserScore(newScore));
+            }
+
+            // gọi refresh bảng người chơi cho tiện
+            getListOnline();
+        }
+    }
 
     // ====== Helper: đẩy tên người chơi vào HUD GameView ======
     private void pushNamesToGameView() {
@@ -575,6 +594,14 @@ public class SocketHandler {
         if (imageOrKey == null || imageOrKey.isBlank()) return "/assets/trash/default.png";
         if (imageOrKey.startsWith("/")) return imageOrKey;
         return "/assets/trash/" + imageOrKey + ".png";
+    }
+    
+    public String getCurrentOpponent() {
+        return currentOpponent;
+    }
+
+    public void setCurrentOpponent(String opponent) {
+        this.currentOpponent = opponent;
     }
 
 }

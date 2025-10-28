@@ -213,21 +213,39 @@ public class ClientRun {
     }
 
     public static void closeAllScene() {
-        if (connectServer != null) connectServer.dispose();
-        if (loginView != null) loginView.dispose();
-        if (registerView != null) registerView.dispose();
-        if (homeView != null) homeView.dispose();
-        if (messageView != null) messageView.dispose();
-        if (infoPlayerView != null) infoPlayerView.dispose();
-        if (rankView != null) rankView.dispose();
-        if (rankWinView != null) rankWinView.dispose();
-        if (historyView != null) historyView.dispose();
-        if (gameView != null) gameView.dispose();
+        if (connectServer != null) {
+            connectServer.dispose();
+        }
+        if (loginView != null) {
+            loginView.dispose();
+        }
+        if (registerView != null) {
+            registerView.dispose();
+        }
+        if (homeView != null) {
+            homeView.dispose();
+        }
+        if (messageView != null) {
+            messageView.dispose();
+        }
+        if (infoPlayerView != null) {
+            infoPlayerView.dispose();
+        }
+        if (rankView != null) {
+            rankView.dispose();
+        }
+        if (rankWinView != null) {
+            rankWinView.dispose();
+        }
+        if (historyView != null) {
+            historyView.dispose();
+        }
+        if (gameView != null) {
+            gameView.dispose();
+        }
     }
 
     public static void main(String[] args) {
         new ClientRun();
     }
 }
-
-

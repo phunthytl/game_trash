@@ -25,6 +25,7 @@ public class GameView extends JFrame {
 
     private final GameCanvas canvas;
     private SocketHandler net; // giữ theo cấu trúc cũ (không dùng trong static canvas)
+    private boolean forfeitSent = false;
 
     // [ADD] Catalog rác nhận từ server (nếu có)
     private List<Trash> serverCatalog = new ArrayList<>();
@@ -57,6 +58,44 @@ public class GameView extends JFrame {
         canvas = new GameCanvas();
         canvas.setServerCatalog(serverCatalog);
         setContentPane(canvas);
+        
+        JButton btnLeaveGame = new JButton("Thoát trận");
+        btnLeaveGame.setBackground(new Color(220, 53, 69)); // đỏ nhẹ
+        btnLeaveGame.setForeground(Color.WHITE);
+        btnLeaveGame.setFocusPainted(false);
+        btnLeaveGame.setFont(btnLeaveGame.getFont().deriveFont(Font.BOLD, 13f));
+        btnLeaveGame.setBounds(20, 80, 110, 30); // vị trí góc trái
+
+        // xử lý khi nhấn
+        btnLeaveGame.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Thoát giữa trận sẽ tính bạn THUA. Xác nhận?",
+                    "Xác nhận thoát",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    if (!forfeitSent &&
+                        ClientRun.socketHandler != null &&
+                        ClientRun.socketHandler.getRoomIdPresent() != null &&
+                        ClientRun.socketHandler.getCurrentOpponent() != null) {
+
+                        forfeitSent = true;
+                        ClientRun.socketHandler.leaveGame(ClientRun.socketHandler.getCurrentOpponent());
+                    }
+                } catch (Exception ignored) {}
+                ClientRun.closeScene(ClientRun.SceneName.GAMEVIEW);
+                if (ClientRun.homeView != null) {
+                    ClientRun.homeView.setVisible(true);
+                    ClientRun.homeView.toFront();
+                }
+            }
+        });
+
+        // thêm nút vào canvas
+        canvas.setLayout(null);
+        canvas.add(btnLeaveGame);
 
         pack();
         setLocationRelativeTo(null);
@@ -65,11 +104,26 @@ public class GameView extends JFrame {
         // Auto start/stop
         addWindowListener(new WindowAdapter() {
             @Override public void windowOpened(WindowEvent e) { start(); }
-            @Override public void windowClosing(WindowEvent e) { stop(); }
+
+            @Override public void windowClosing(WindowEvent e) {
+                stop();
+
+                // 🔥 Gửi xử thua nếu đang trong trận
+                try {
+                    if (!forfeitSent &&
+                        ClientRun.socketHandler != null &&
+                        ClientRun.socketHandler.getRoomIdPresent() != null &&
+                        ClientRun.socketHandler.getCurrentOpponent() != null) {
+
+                        forfeitSent = true; // chỉ gửi 1 lần
+                        ClientRun.socketHandler.leaveGame(ClientRun.socketHandler.getCurrentOpponent());
+                    }
+                } catch (Exception ignored) {}
+            }
         });
     }
 
-    public void start() { canvas.start(); }
+    public void start() { canvas.start(); forfeitSent = false; }
     public void stop()  { canvas.stop();  }
 
     // ===== Public API để SocketHandler cập nhật UI =====
@@ -117,7 +171,7 @@ public class GameView extends JFrame {
         private Timer animTimer;
         private Timer spawnTimer;
         private Timer matchTimer;
-        private int timeLeft = 10;
+        private int timeLeft = 60;
         private int nextId = 1;
         private int score = 0;
 
@@ -321,7 +375,7 @@ public class GameView extends JFrame {
 
         void start() {
             stop();
-            timeLeft = 10;
+            timeLeft = 60;
             score = 0;
             items.clear();
 

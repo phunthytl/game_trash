@@ -120,60 +120,85 @@ public class Room {
         return null;
     }
 
-    public void draw () throws SQLException {
+    private void pushScoreUpdateToPlayers(UserModel u1, UserModel u2) {
+        if (client1 != null) {
+            client1.setScore(u1.getScore());
+            client1.sendData("SCORE_UPDATE;success;" + u1.getUserName() + ";" + u1.getScore());
+        }
+        if (client2 != null) {
+            client2.setScore(u2.getScore());
+            client2.sendData("SCORE_UPDATE;success;" + u2.getUserName() + ";" + u2.getScore());
+        }
+    }
+
+    public void draw() throws SQLException {
         UserModel user1 = new UserController().getUser(client1.getLoginUser());
         UserModel user2 = new UserController().getUser(client2.getLoginUser());
-        
+
         user1.setDraw(user1.getDraw() + 1);
         user2.setDraw(user2.getDraw() + 1);
-        
-        user1.setScore(user1.getScore()+ 0.5f);
-        user2.setScore(user2.getScore()+ 0.5f);
-        
-        int totalMatchUser1 = user1.getWin() + user1.getDraw() + user1.getLose();
-        int totalMatchUser2 = user2.getWin() + user2.getDraw() + user2.getLose();
-        
+        user1.setScore(user1.getScore() + 0.5f);
+        user2.setScore(user2.getScore() + 0.5f);
+
         new UserController().updateUser(user1);
         new UserController().updateUser(user2);
+
+        // 🔥 cập nhật client + đẩy về UI
+        pushScoreUpdateToPlayers(user1, user2);
     }
-    
+
     public void client1Win() throws SQLException {
         UserModel user1 = new UserController().getUser(client1.getLoginUser());
         UserModel user2 = new UserController().getUser(client2.getLoginUser());
-        
+
         user1.setWin(user1.getWin() + 1);
         user2.setLose(user2.getLose() + 1);
-        
-        user1.setScore(user1.getScore()+ 1);
-        
-        int totalMatchUser1 = user1.getWin() + user1.getDraw() + user1.getLose();
-        int totalMatchUser2 = user2.getWin() + user2.getDraw() + user2.getLose();
-        
+        user1.setScore(user1.getScore() + 1);
+
         new UserController().updateUser(user1);
         new UserController().updateUser(user2);
+
+        // 🔥 cập nhật client + đẩy về UI
+        pushScoreUpdateToPlayers(user1, user2);
     }
-    
+
     public void client2Win() throws SQLException {
         UserModel user1 = new UserController().getUser(client1.getLoginUser());
         UserModel user2 = new UserController().getUser(client2.getLoginUser());
-        
+
         user2.setWin(user2.getWin() + 1);
         user1.setLose(user1.getLose() + 1);
-        
-        user2.setScore(user2.getScore()+ 1);
-        
-        int totalMatchUser1 = user1.getWin() + user1.getDraw() + user1.getLose();
-        int totalMatchUser2 = user2.getWin() + user2.getDraw() + user2.getLose();
-        
+        user2.setScore(user2.getScore() + 1);
+
         new UserController().updateUser(user1);
         new UserController().updateUser(user2);
+
+        // 🔥 cập nhật client + đẩy về UI
+        pushScoreUpdateToPlayers(user1, user2);
     }
-    
-    public void userLeaveGame (String username) throws SQLException {
-        if (client1.getLoginUser().equals(username)) {
-            client2Win();
-        } else if (client2.getLoginUser().equals(username)) {
-            client1Win();
+
+    public void userLeaveGame(String username) throws SQLException {
+        String user1 = client1.getLoginUser();
+        String user2 = client2.getLoginUser();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm");
+        String now = dtf.format(LocalDateTime.now());
+
+        // nếu client1 thoát
+        if (user1.equals(username)) {
+            client2Win(); // người còn lại thắng
+
+            // ghi lịch sử
+            new UserController().updateHistory(user1, user2, now + " thua");
+
+            System.out.println("[FORFEIT] " + user1 + " rời trận -> " + user2 + " thắng.");
+        }
+        // nếu client2 thoát
+        else if (user2.equals(username)) {
+            client1Win(); // người còn lại thắng
+
+            new UserController().updateHistory(user1, user2, now + " thang");
+
+            System.out.println("[FORFEIT] " + user2 + " rời trận -> " + user1 + " thắng.");
         }
     }
     

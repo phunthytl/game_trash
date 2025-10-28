@@ -97,7 +97,7 @@ public class LoginView extends javax.swing.JFrame {
                 btnChangeRegisterActionPerformed(evt);
             }
         });
-        getContentPane().add(btnChangeRegister, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 230, -1, -1));
+        getContentPane().add(btnChangeRegister, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 230, -1, -1));
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel4.setForeground(new java.awt.Color(255, 255, 255));
