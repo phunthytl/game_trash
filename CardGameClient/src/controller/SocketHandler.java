@@ -91,6 +91,7 @@ public class SocketHandler {
                     case "HISTORY" -> onReceiveHistory(received);
                     case "TRASH_LIST" -> onReceiveTrashList(received);
                     case "SCORE_UPDATE" -> onReceiveScoreUpdate(received);
+                    case "LIVE_SCORE" -> onReceiveLiveScore(received);
                     case "EXIT" -> running = false;
                     default -> System.out.println("Unknown type: " + type);
                 }
@@ -533,6 +534,22 @@ public class SocketHandler {
 
             // gọi refresh bảng người chơi cho tiện
             getListOnline();
+        }
+    }
+    
+    private void onReceiveLiveScore(String received) {
+        String[] sp = received.split(";");
+        if (sp.length < 4) return;
+        String status = sp[1];
+        if (!"success".equals(status)) return;
+
+        String player = sp[2];
+        int newScore = Integer.parseInt(sp[3]);
+
+        // Nếu đối thủ cập nhật điểm thì hiển thị
+        if (ClientRun.gameView != null &&
+            !player.equals(loginUser)) {
+            ClientRun.gameView.updateOpponentScore(newScore);
         }
     }
 

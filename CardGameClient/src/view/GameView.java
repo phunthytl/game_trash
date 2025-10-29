@@ -131,7 +131,11 @@ public class GameView extends JFrame {
     public void setOpponentName(String name) { canvas.setOpponentName(name); }
     /** Server gửi RESULT_GAME -> overlay hiển thị kết quả */
     public void showServerResult(String result, String myName) { canvas.showServerResult(result, myName); }
-
+    public void updateOpponentScore(int newScore) {
+        if (canvas != null) {
+            canvas.updateOpponentScore(newScore);
+        }
+    }
     @Override
     public void dispose() {
         stop();
@@ -174,6 +178,7 @@ public class GameView extends JFrame {
         private int timeLeft = 60;
         private int nextId = 1;
         private int score = 0;
+        private int opponentScoreLive = 0;
 
         // dragging state
         private Drop dragging = null;
@@ -204,6 +209,12 @@ public class GameView extends JFrame {
         private String overlayTitle = "";
         private String overlaySubtitle = "";
         private JButton btnConfirm;
+        
+        public void updateOpponentScore(int newScore) {
+            opponentScoreLive = newScore; // opponentScoreLive bạn đã khai báo rồi
+            repaint();                    // vẽ lại giao diện
+        }
+
 
         GameCanvas() {
             setPreferredSize(new Dimension(CANVAS_W, CANVAS_H));
@@ -455,7 +466,17 @@ public class GameView extends JFrame {
 
         // ====== Hooks theo protocol hiện có ======
         private void onLocalScoreChanged() {
-            // Protocol hiện tại KHÔNG có live-score đối thủ -> không gửi gì ở đây.
+            // gửi điểm hiện tại cho server (đồng bộ cho đối thủ)
+            try {
+                if (ClientRun.socketHandler != null &&
+                    ClientRun.socketHandler.getRoomIdPresent() != null) {
+
+                    ClientRun.socketHandler.sendData(
+                        "LIVE_SCORE;" + ClientRun.socketHandler.getLoginUser() + ";" +
+                        ClientRun.socketHandler.getRoomIdPresent() + ";" + score
+                    );
+                }
+            } catch (Exception ignored) {}
         }
 
         private void onLocalFinished() {
@@ -569,7 +590,7 @@ public class GameView extends JFrame {
             g2.drawString("Đối thủ: " + opponentName, x + 12, y + 24);
 
             g2.setFont(getFont().deriveFont(Font.PLAIN, 13f));
-            g2.drawString("Kết quả sẽ hiển thị khi kết thúc.", x + 12, y + 44);
+            g2.drawString("Điểm hiện tại: " + opponentScoreLive, x + 12, y + 44);
         }
 
         private void drawOverlay(Graphics2D g2) {

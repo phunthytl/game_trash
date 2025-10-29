@@ -5,10 +5,7 @@
         <group>
             <file>file:/D:/Web/Game%20PLR/CardGameClient/src/run/ClientRun.java</file>
             <file>file:/D:/Web/Game%20PLR/CardGameClient/src/controller/SocketHandler.java</file>
-            <file>file:/D:/Web/Game%20PLR/CardGameClient/src/view/RankView.java</file>
-            <file>file:/D:/Web/Game%20PLR/CardGameClient/src/view/HistoryView.java</file>
             <file>file:/D:/Web/Game%20PLR/CardGameClient/src/view/GameView.java</file>
-            <file>file:/D:/Web/Game%20PLR/CardGameClient/src/view/InfoPlayerView.java</file>
         </group>
     </open-files>
 </project-private>

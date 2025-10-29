@@ -126,6 +126,9 @@ public class Client implements Runnable {
                     case "TRASH_LIST_REQUEST":
                         onReceiveTrashListRequest();
                         break;
+                    case "LIVE_SCORE":
+                        onReceiveLiveScore(received);
+                        break;
 
                     case "EXIT":
                         running = false;
@@ -516,25 +519,52 @@ public class Client implements Runnable {
         }
     }
     private void onReceiveTrashListRequest() {
-    try {
-        java.sql.Connection conn = connection.DatabaseConnection.getConnection();
-        dao.TrashDAO dao = new dao.TrashDAO(conn);
-        java.util.List<model.TrashModel> items = dao.listAll();
+        try {
+            java.sql.Connection conn = connection.DatabaseConnection.getConnection();
+            dao.TrashDAO dao = new dao.TrashDAO(conn);
+            java.util.List<model.TrashModel> items = dao.listAll();
 
-        StringBuilder sb = new StringBuilder("TRASH_LIST;OK;");
-        for (int i = 0; i < items.size(); i++) {
-            model.TrashModel t = items.get(i);
-            if (i > 0) sb.append('|');
-            sb.append(t.getTrashId()).append(',')
-              .append(t.getTrashName()).append(',')
-              .append(t.getCategory()).append(',')
-              .append(t.getImage() == null ? "" : t.getImage());
+            StringBuilder sb = new StringBuilder("TRASH_LIST;OK;");
+            for (int i = 0; i < items.size(); i++) {
+                model.TrashModel t = items.get(i);
+                if (i > 0) sb.append('|');
+                sb.append(t.getTrashId()).append(',')
+                  .append(t.getTrashName()).append(',')
+                  .append(t.getCategory()).append(',')
+                  .append(t.getImage() == null ? "" : t.getImage());
+            }
+            sendData(sb.toString());
+        } catch (Exception ex) {
+            sendData("TRASH_LIST;FAIL;" + ex.getMessage());
         }
-        sendData(sb.toString());
-    } catch (Exception ex) {
-        sendData("TRASH_LIST;FAIL;" + ex.getMessage());
     }
-}
+    
+    private void onReceiveLiveScore(String received) {
+        try {
+            String[] sp = received.split(";");
+            String username = sp[1];
+            String roomId = sp[2];
+            String score = sp[3];
+
+            Room r = ServerRun.roomManager.find(roomId);
+            if (r == null) return;
+
+            // gửi thông tin điểm mới cho đối thủ
+            Client opponent = null;
+            if (r.getClient1() != null && username.equals(r.getClient1().getLoginUser())) {
+                opponent = r.getClient2();
+            } else if (r.getClient2() != null && username.equals(r.getClient2().getLoginUser())) {
+                opponent = r.getClient1();
+            }
+
+            if (opponent != null) {
+                opponent.sendData("LIVE_SCORE;success;" + username + ";" + score);
+            }
+
+        } catch (Exception ex) {
+            System.err.println("[ERROR] onReceiveLiveScore: " + ex.getMessage());
+        }
+    }
 
 
 
