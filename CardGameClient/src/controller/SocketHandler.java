@@ -470,7 +470,7 @@ public class SocketHandler {
             roomIdPresent = null;
             runEDT(() -> {
                 ClientRun.closeScene(ClientRun.SceneName.GAMEVIEW);
-                JOptionPane.showMessageDialog(ClientRun.homeView, user1 + " đã thoát game!");
+                JOptionPane.showMessageDialog(ClientRun.homeView, user1 + " đã thoát game!\n Bạn thắng! 🎉");
             });
         }
     }

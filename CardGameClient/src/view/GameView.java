@@ -272,7 +272,7 @@ public class GameView extends JFrame {
                             items.remove(dragging);
                             dragging = null;
 
-                            onLocalScoreChanged(); // (protocol hiện có không dùng live-score)
+                            onLocalScoreChanged();
                             repaint();
                             return;
                         }
@@ -520,59 +520,110 @@ public class GameView extends JFrame {
 
         // ===== Painting =====
         @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+protected void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // NỀN: vẽ trước mọi thứ khác
-            if (bgImage != null) {
-                // kéo giãn vừa khung (đơn giản, nhanh)
-                g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-            }
+    // 1. Vẽ background toàn màn
+    if (bgImage != null) {
+        g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+    }
 
-            // Bins: chỉ vẽ ảnh (KHÔNG vẽ chữ, KHÔNG vẽ viền)
-            for (Bin b : bins) {
-                Image img = binImages.get(b.type);
-                if (img == null) img = defaultBinImg;
+    // 2. Vẽ các thùng rác (bin)
+    for (Bin b : bins) {
+        Image img = binImages.get(b.type);
+        if (img == null) img = defaultBinImg;
 
-                if (img != null) {
-                    g2.drawImage(img, b.rect.x, b.rect.y, b.rect.width, b.rect.height, null);
-                } else {
-                    // fallback nếu thiếu ảnh -> khối màu (cũng không viền/không chữ)
-                    g2.setColor(colorForType(b.type).darker());
-                    g2.fillRoundRect(b.rect.x, b.rect.y, b.rect.width, b.rect.height, 16, 16);
-                }
-            }
+        if (img != null) {
+            g2.drawImage(img, b.rect.x, b.rect.y, b.rect.width, b.rect.height, null);
+        } else {
+            g2.setColor(colorForType(b.type).darker());
+            g2.fillRoundRect(b.rect.x, b.rect.y, b.rect.width, b.rect.height, 16, 16);
+        }
+    }
 
-            // Items (ưu tiên vẽ ảnh; nếu không có ảnh thì fallback khối màu)
-            for (Drop d : items) {
-    Image img = d.trash.getImage();
-    if (img != null) {
-        g2.drawImage(img, d.x, d.y, d.w, d.h, null);
-    } else {
-        g2.setColor(colorForType(d.trash.getType()));
-        g2.fillRoundRect(d.x, d.y, d.w, d.h, 10, 10);
+    // 3. Vẽ các item rác rơi
+    for (Drop d : items) {
+        Image img = d.trash.getImage();
+        if (img != null) {
+            g2.drawImage(img, d.x, d.y, d.w, d.h, null);
+        } else {
+            g2.setColor(colorForType(d.trash.getType()));
+            g2.fillRoundRect(d.x, d.y, d.w, d.h, 10, 10);
+        }
+    }
+
+    // =========================
+    // 4. HUD bên trái với nền trắng mờ
+    // =========================
+
+    // Nội dung HUD
+    String line1 = "Time: " + timeLeft + "s";
+    String line2 = myName + " (Bạn): " + score + " điểm";
+    String line3 = "Kéo rác vào đúng thùng (+3). Sai (-1).";
+
+    // Chọn font trước để đo kích thước
+    Font bold14 = getFont().deriveFont(Font.BOLD, 14f);
+    Font plain12 = getFont().deriveFont(Font.PLAIN, 12f);
+
+    g2.setFont(bold14);
+    FontMetrics fm1 = g2.getFontMetrics();
+    int w1 = fm1.stringWidth(line1);
+    int w2 = fm1.stringWidth(line2);
+
+    g2.setFont(plain12);
+    FontMetrics fm2 = g2.getFontMetrics();
+    int w3 = fm2.stringWidth(line3);
+
+    // Lấy chiều rộng max của 3 dòng
+    int textW = Math.max(w1, Math.max(w2, w3));
+
+    // Padding xung quanh chữ
+    int pad = 8;
+    // Tọa độ góc trái trên của box HUD
+    int hudX = 8;
+    int hudY = 8;
+
+    // Chiều cao tổng: 3 dòng + khoảng cách
+    // dòng1 y≈20, dòng2 y≈40, dòng3 y≈60 → tổng khoảng ~60
+    int hudHeight = 60;
+    int hudWidth = textW + pad * 2;
+
+    // Vẽ nền trắng mờ (alpha 200/255 ~ hơi đục)
+    g2.setColor(new Color(255, 255, 255, 200));
+    g2.fillRoundRect(hudX, hudY, hudWidth, hudHeight, 12, 12);
+
+    // Viền xám nhạt nhẹ cho box HUD (tùy thích, nếu không muốn viền thì bỏ 2 dòng dưới)
+    g2.setColor(new Color(0, 0, 0, 40));
+    g2.setStroke(new BasicStroke(1f));
+    g2.drawRoundRect(hudX, hudY, hudWidth, hudHeight, 12, 12);
+
+    // Vẽ text đè lên box
+    int baseTextX = hudX + pad;
+    g2.setColor(Color.DARK_GRAY);
+
+    g2.setFont(bold14);
+    g2.drawString(line1, baseTextX, 20);
+    g2.drawString(line2, baseTextX, 40);
+
+    g2.setFont(plain12);
+    g2.drawString(line3, baseTextX, 60);
+
+    // =========================
+    // 5. Opponent panel (góc phải)
+    // =========================
+    // Giữ nguyên logic cũ của bạn
+    drawOpponentPanel(g2);
+
+    // =========================
+    // 6. Overlay cuối game nếu có
+    // =========================
+    if (showOverlay) {
+        drawOverlay(g2);
     }
 }
 
-
-            // HUD Left (my info)
-            g2.setColor(Color.DARK_GRAY);
-            g2.setFont(getFont().deriveFont(Font.BOLD, 14f));
-            g2.drawString("Time: " + timeLeft + "s", 12, 20);
-            g2.drawString(myName + " (Bạn): " + score + " điểm", 12, 40);
-            g2.setFont(getFont().deriveFont(Font.PLAIN, 12f));
-            g2.drawString("Kéo rác vào đúng thùng (+3). Sai (-1).", 12, 60);
-
-            // Opponent panel (top-right)
-            drawOpponentPanel(g2);
-
-            // Overlay at end
-            if (showOverlay) {
-                drawOverlay(g2);
-            }
-        }
 
         private void drawOpponentPanel(Graphics2D g2) {
             int panelW = 240;

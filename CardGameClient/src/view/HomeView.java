@@ -78,8 +78,8 @@ public class HomeView extends javax.swing.JFrame {
         jPanel1.setPreferredSize(new java.awt.Dimension(1100, 97));
         jPanel1.setLayout(null);
 
+        jLabel2.setBackground(new java.awt.Color(255, 255, 255));
         jLabel2.setFont(new java.awt.Font("Algerian", 1, 64)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("Phân loại rác");
         jPanel1.add(jLabel2);
         jLabel2.setBounds(80, 10, 450, 82);
@@ -122,7 +122,7 @@ public class HomeView extends javax.swing.JFrame {
         jPanel1.add(btnLogOut);
         btnLogOut.setBounds(180, 430, 200, 50);
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/background.jpg"))); // NOI18N
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/bg.jpg"))); // NOI18N
         jPanel1.add(jLabel1);
         jLabel1.setBounds(0, 0, 600, 600);
 
